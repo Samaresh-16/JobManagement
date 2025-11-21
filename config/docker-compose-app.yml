@@ -1,0 +1,173 @@
+version: "3.9"
+
+services:
+  # ------------------------------------------------------
+  # 1️⃣ CONFIG SERVER
+  # ------------------------------------------------------
+  config-server:
+    build: ../config-server
+    container_name: config-server
+    restart: always
+    ports:
+      - "8888:8888"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_CLOUD_CONFIG_SERVER_NATIVE_SEARCH_LOCATIONS=file:/config-repo
+    volumes:
+      - ./config-repo:/config-repo
+    depends_on:
+      - postgres
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8888/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  # ------------------------------------------------------
+  # 2️⃣ EUREKA SERVER
+  # ------------------------------------------------------
+  eureka-server:
+    build: ../eureka-server
+    container_name: eureka-server
+    restart: always
+    ports:
+      - "8761:8761"
+    depends_on:
+      config-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8761/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  # ------------------------------------------------------
+  # 3️⃣ API GATEWAY
+  # ------------------------------------------------------
+  gateway:
+    build: ../gateway
+    container_name: gateway
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  # ------------------------------------------------------
+  # 4️⃣ AUTH SERVICE
+  # ------------------------------------------------------
+  auth-service:
+    build: ../auth-service
+    container_name: auth-service
+    restart: always
+    ports:
+      - "8081:8081"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/microservice
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=55
+
+  # ------------------------------------------------------
+  # 5️⃣ USER SERVICE
+  # ------------------------------------------------------
+  user-service:
+    build: ../user-service
+    container_name: user-service
+    restart: always
+    ports:
+      - "8082:8082"
+    depends_on:
+      auth-service:
+        condition: service_started
+      eureka-server:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/microservice
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=55
+
+  # ------------------------------------------------------
+  # 6️⃣ JOB SERVICE
+  # ------------------------------------------------------
+  job-service:
+    build: ../job-service
+    container_name: job-service
+    restart: always
+    ports:
+      - "8083:8083"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/microservice
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=55
+
+  # ------------------------------------------------------
+  # 7️⃣ NOTIFICATION SERVICE
+  # ------------------------------------------------------
+  notification-service:
+    build: ../notification-service
+    container_name: notification-service
+    restart: always
+    ports:
+      - "8084:8084"
+    depends_on:
+      kafka:
+        condition: service_healthy
+      eureka-server:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+
+  # ------------------------------------------------------
+  # 8️⃣ FILE STORAGE SERVICE
+  # ------------------------------------------------------
+  file-storage:
+    build: ../file-storage
+    container_name: file-storage
+    restart: always
+    ports:
+      - "8085:8085"
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/microservice
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=55
+
+# ------------------------------------------------------
+# SHARED NETWORK AND DEPENDENCIES
+# ------------------------------------------------------
+networks:
+  default:
+    name: job-net
+    external: true
