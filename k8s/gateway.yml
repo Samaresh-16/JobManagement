@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: gateway
-          image: ghcr.io/samaresh-16/gateway:fc5e82de053763ec66822078c0c41dd69437afa8
+          image: ghcr.io/samaresh-16/gateway:latest
           ports:
             - containerPort: 8080
 
