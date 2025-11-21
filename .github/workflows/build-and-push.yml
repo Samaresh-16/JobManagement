@@ -14,12 +14,14 @@ jobs:
       fail-fast: false
       matrix:
         service:
+          - auth-service
+          - config-server
+          - eureka-server
+          - file-storage
           - gateway
           - job-service
           - user-service
-          - auth-service
-          - file-storage
-          - notifications
+          - notification-service
 
     steps:
       - name: Checkout code
