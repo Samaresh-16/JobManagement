@@ -1,0 +1,104 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka
+  namespace: jobmgmt
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka
+  template:
+    metadata:
+      labels:
+        app: kafka
+    spec:
+      containers:
+        - name: kafka
+          image: apache/kafka:3.7.0
+          ports:
+            - containerPort: 9092
+            - containerPort: 9093
+          env:
+            - name: CLUSTER_ID
+              value: "MkU3OEVBNTcwNTJENDM2Qk"
+          
+          command:
+            - sh
+            - -c
+            - |
+              # Create KRaft server properties
+              cat > /tmp/server.properties << 'EOF'
+              # Node and process configuration
+              node.id=1
+              process.roles=broker,controller
+              
+              # Listeners
+              listeners=PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+              advertised.listeners=PLAINTEXT://kafka:9092
+              controller.listener.names=CONTROLLER
+              listener.security.protocol.map=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+              inter.broker.listener.name=PLAINTEXT
+              
+              # Controller quorum
+              controller.quorum.voters=1@localhost:9093
+              
+              # Log directories
+              log.dirs=/var/lib/kafka/data
+              
+              # Single node replication settings
+              offsets.topic.replication.factor=1
+              transaction.state.log.replication.factor=1
+              transaction.state.log.min.isr=1
+              min.insync.replicas=1
+              default.replication.factor=1
+              
+              # Other settings
+              num.network.threads=3
+              num.io.threads=8
+              socket.send.buffer.bytes=102400
+              socket.receive.buffer.bytes=102400
+              socket.request.max.bytes=104857600
+              num.partitions=1
+              num.recovery.threads.per.data.dir=1
+              log.retention.hours=168
+              log.segment.bytes=1073741824
+              log.retention.check.interval.ms=300000
+              EOF
+              
+              # Format storage if not already formatted
+              if [ ! -f /var/lib/kafka/data/meta.properties ]; then
+                echo "Formatting Kafka storage directory..."
+                /opt/kafka/bin/kafka-storage.sh format -t ${CLUSTER_ID} -c /tmp/server.properties
+                echo "Formatting completed"
+              else
+                echo "Storage already formatted, skipping format step"
+              fi
+              
+              # Start Kafka
+              echo "Starting Kafka server..."
+              exec /opt/kafka/bin/kafka-server-start.sh /tmp/server.properties
+          
+          volumeMounts:
+            - name: kafka-data
+              mountPath: /var/lib/kafka/data
+      volumes:
+        - name: kafka-data
+          persistentVolumeClaim:
+            claimName: kafka-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka
+  namespace: jobmgmt
+spec:
+  selector:
+    app: kafka
+  ports:
+    - port: 9092
+      name: broker
+      targetPort: 9092
+    - port: 9093
+      name: controller
+      targetPort: 9093
