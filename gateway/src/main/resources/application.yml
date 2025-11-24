@@ -90,7 +90,7 @@ spring:
           filters:
             - SetPath=/v3/api-docs
 
-        # -------- CONFIG SERVER (optional) --------
+        # -------- CONFIG SERVER (optional) -------
         - id: config-server-swagger-ui
           uri: lb://config-server
           predicates:
