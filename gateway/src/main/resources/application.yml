@@ -13,6 +13,97 @@ spring:
       httpclient:
         connect-timeout: 60000
         response-timeout: 60s
+      routes:
+
+        # -------- USER SERVICE SWAGGER --------
+        - id: user-service-swagger-ui
+          uri: lb://user-service
+          predicates:
+            - Path=/swagger/user/**
+          filters:
+            - RewritePath=/swagger/user/(?<segment>.*), /${segment}
+
+        - id: user-service-api-docs
+          uri: lb://user-service
+          predicates:
+            - Path=/swagger/user-v3/api-docs
+          filters:
+            - SetPath=/v3/api-docs
+
+        # -------- JOB SERVICE SWAGGER --------
+        - id: job-service-swagger-ui
+          uri: lb://job-service
+          predicates:
+            - Path=/swagger/job/**
+          filters:
+            - RewritePath=/swagger/job/(?<segment>.*), /${segment}
+
+        - id: job-service-api-docs
+          uri: lb://job-service
+          predicates:
+            - Path=/swagger/job-v3/api-docs
+          filters:
+            - SetPath=/v3/api-docs
+
+        # -------- AUTH SERVICE SWAGGER --------
+        - id: auth-service-swagger-ui
+          uri: lb://auth-service
+          predicates:
+            - Path=/swagger/auth/**
+          filters:
+            - RewritePath=/swagger/auth/(?<segment>.*), /${segment}
+
+        - id: auth-service-api-docs
+          uri: lb://auth-service
+          predicates:
+            - Path=/swagger/auth-v3/api-docs
+          filters:
+            - SetPath=/v3/api-docs
+
+        # -------- FILE STORAGE SWAGGER --------
+        - id: file-storage-swagger-ui
+          uri: lb://file-storage
+          predicates:
+            - Path=/swagger/storage/**
+          filters:
+            - RewritePath=/swagger/storage/(?<segment>.*), /${segment}
+
+        - id: file-storage-api-docs
+          uri: lb://file-storage
+          predicates:
+            - Path=/swagger/storage-v3/api-docs
+          filters:
+            - SetPath=/v3/api-docs
+
+        # -------- NOTIFICATION SERVICE SWAGGER --------
+        - id: notification-service-swagger-ui
+          uri: lb://notification-service
+          predicates:
+            - Path=/swagger/notify/**
+          filters:
+            - RewritePath=/swagger/notify/(?<segment>.*), /${segment}
+
+        - id: notification-service-api-docs
+          uri: lb://notification-service
+          predicates:
+            - Path=/swagger/notify-v3/api-docs
+          filters:
+            - SetPath=/v3/api-docs
+
+        # -------- CONFIG SERVER (optional) --------
+        - id: config-server-swagger-ui
+          uri: lb://config-server
+          predicates:
+            - Path=/swagger/config/**
+          filters:
+            - RewritePath=/swagger/config/(?<segment>.*), /${segment}
+
+        - id: config-server-api-docs
+          uri: lb://config-server
+          predicates:
+            - Path=/swagger/config-v3/api-docs
+          filters:
+            - SetPath=/v3/api-docs
 
 # Eureka client configuration (important for Docker Compose)
 eureka:
