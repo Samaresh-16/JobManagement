@@ -1,0 +1,26 @@
+meta {
+  name: Create Job
+  type: http
+  seq: 5
+}
+
+post {
+  url: http://localhost:8080/job-service/v1/job-service/job/create
+  body: multipartForm
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer {{jwttoken}}
+  Content-Type: multipart/form-data
+}
+
+body:multipart-form {
+  request: {"name":"Test Job","description":"Demo Job1","categoryId":"{{categoryId}}","keys":["java","spring"]};type=application/json @contentType(application/json)
+  ~file: @file()
+}
+
+settings {
+  encodeUrl: false
+  timeout: 0
+}

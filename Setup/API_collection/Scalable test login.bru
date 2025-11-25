@@ -1,0 +1,23 @@
+meta {
+  name: Scalable test login
+  type: http
+  seq: 9
+}
+
+post {
+  url: http://localhost:8080/auth-service/v1/auth/login
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "username":"user01",
+    "password":"pass123456"
+  }
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

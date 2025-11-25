@@ -1,0 +1,29 @@
+meta {
+  name: Make offer
+  type: http
+  seq: 7
+}
+
+post {
+  url: http://localhost:8080/job-service/v1/job-service/offer/makeAnOffer
+  body: json
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyMDEiLCJpc3MiOiJST0xFX0FETUlOIiwiaWF0IjoxNzYzNTM5MzQzLCJleHAiOjE3NjM1NDI5NDN9.Bx7-r-RGBDOtK4DBvn7EA-7b9JZEwim5SufyXN-QBHc
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "userId": "{{userId}}",
+    "advertId": "{{advertId}}",
+    "offeredPrice": 50000
+  }
+}
+
+settings {
+  encodeUrl: false
+  timeout: 0
+}

@@ -1,0 +1,35 @@
+meta {
+  name: Create advert
+  type: http
+  seq: 6
+}
+
+post {
+  url: http://localhost:8080/job-service/v1/job-service/advert/create
+  body: multipartForm
+  auth: inherit
+}
+
+headers {
+  Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c2VyMDEiLCJpc3MiOiJST0xFX0FETUlOIiwiaWF0IjoxNzYzNTM5MzQzLCJleHAiOjE3NjM1NDI5NDN9.Bx7-r-RGBDOtK4DBvn7EA-7b9JZEwim5SufyXN-QBHc
+  Content-Type: multipart/form-data
+}
+
+body:multipart-form {
+  request: '''
+    {
+    	"name":"Test advert",
+            "jobId":"{{jobId}}",
+            "userId":"{{userId}}",
+            "title":"Senior Backend Engineer Advert",
+    	"advertiser":"CUSTOMER",
+            "description":"We are looking for an experienced backend engineer proficient in Spring Boot and Kafka."
+          };type=application/json
+  ''' @contentType(application/json)
+  ~file: @file()
+}
+
+settings {
+  encodeUrl: false
+  timeout: 0
+}
